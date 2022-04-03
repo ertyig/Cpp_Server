@@ -8,6 +8,8 @@
 #include "util.h"
 #include <unistd.h>
 
+#define BUFFER_SIZE 1024
+
 int main()
 {
     int sockfd=socket(AF_INET,SOCK_STREAM,0);
@@ -23,7 +25,7 @@ int main()
 
     while(true)
     {
-        char buf[1024];//定义缓冲区
+        char buf[BUFFER_SIZE];//定义缓冲区
         bzero(&buf,sizeof(buf));//清空缓冲区
         scanf("%s",buf);
         ssize_t write_bytes=write(sockfd,buf,sizeof(buf));//向服务器写数据

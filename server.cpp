@@ -6,7 +6,21 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/epoll.h>
+#include <errno.h>
 #include "util.h"
+
+#define MAX_EVENTS 1024
+#define READ_BUFFER 1024
+
+
+void setnonblocking(int fd)
+{
+    fcntl(fd,F_SETFL,fcntl(fd,F_GETFL) | O_NONBLOCK);
+}
+
+
 
 int main()
 {
@@ -23,39 +37,81 @@ int main()
 
     errif(listen(sockfd,SOMAXCONN)==-1,"socket listen error!");
 
-    struct sockaddr_in clnt_addr;
-    socklen_t clnt_addr_len=sizeof(clnt_addr);
-    bzero(&clnt_addr,sizeof(clnt_addr));
+    int epfd=epoll_create1(0);
+    errif(epfd==-1,"epoll create error");
 
-    int clnt_sockfd=accept(sockfd,(sockaddr*)&clnt_addr,&clnt_addr_len);
-    errif(clnt_sockfd==-1,"socket create error!");
+    struct epoll_event events[MAX_EVENTS];
+    struct epoll_event ev;
+    bzero(&events,sizeof(events));
 
-    printf("New client fd %d! IP: %s Port: %d\n",clnt_sockfd,inet_ntoa(clnt_addr.sin_addr),ntohs(clnt_addr.sin_port));
+    bzero(&ev,sizeof(ev));
+    ev.data.fd=sockfd;
+    ev.events=EPOLLIN | EPOLLET;
+    setnonblocking(sockfd);
+    epoll_ctl(epfd,EPOLL_CTL_ADD,sockfd,&ev);
 
+    
     while (true)
     {
-        char buf[1024]; //定义缓冲区
-        bzero(&buf,sizeof(buf)); //清空缓冲区
-        ssize_t read_bytes=read(clnt_sockfd,buf,sizeof(buf));//从客户端socket读到缓冲区，返回已读数据大小
+        int nfds=epoll_wait(epfd,events,MAX_EVENTS,-1);
+        errif(nfds==-1,"epoll wait error");
 
-        if(read_bytes>0)
+        for(int i=0;i<nfds;++i)
         {
-            printf("Message from client fd %d: %s\n",clnt_sockfd,buf);
-            write(clnt_sockfd,buf,sizeof(buf));//将相同的数据写回客户端
-        }
-        else if(read_bytes==0)//read 返回0，表示EOF
-        {
-            printf("client fd %d disconnected\n",clnt_sockfd);
-            close(clnt_sockfd);
-            break;
-        }
-        else if(read_bytes==-1)//read返回-1，表示发生错误，进行错误处理即可
-        {
-            close(clnt_sockfd);
-            errif(true,"socket read error!");
-        }
+            if(events[i].data.fd==sockfd)
+            {
+                struct sockaddr_in clnt_addr;
+                socklen_t clnt_addr_len=sizeof(clnt_addr);
+                bzero(&clnt_addr,sizeof(clnt_addr));
+
+                int clnt_sockfd=accept(sockfd,(sockaddr*)&clnt_addr,&clnt_addr_len);
+                errif(clnt_sockfd==-1,"socket create error!");
+                printf("New client fd %d! IP: %s Port: %d\n",clnt_sockfd,inet_ntoa(clnt_addr.sin_addr),ntohs(clnt_addr.sin_port));
+
+                bzero(&ev,sizeof(ev));
+                ev.data.fd=clnt_sockfd;
+                ev.events=EPOLLIN | EPOLLET;
+                setnonblocking(clnt_sockfd);
+                epoll_ctl(epfd,EPOLL_CTL_ADD,clnt_sockfd,&ev);
+            }
+            else if(events[i].events & EPOLLIN)
+            {
+                char buf[READ_BUFFER]; //定义缓冲区
+                while(true)
+                {
+                    bzero(&buf,sizeof(buf)); //清空缓冲区
+                    ssize_t read_bytes=read(events->data.fd,buf,sizeof(buf));//从客户端socket读到缓冲区，返回已读数据大小
+
+                    if(read_bytes>0)
+                    {
+                        printf("Message from client fd %d: %s\n",events[i].data.fd,buf);
+                        write(events[i].data.fd,buf,sizeof(buf));//将相同的数据写回客户端
+                    }
+                    else if(read_bytes==-1&&errno==EINTR)
+                    {
+                        printf("Continue reading");
+                        continue;
+                    }
+                    else if(read_bytes==-1 && ((errno==EAGAIN || errno==EWOULDBLOCK)))//read返回-1，表示发生错误，进行错误处理即可
+                    {
+                        printf("Finish reading once,errno:%d\n",errno);
+                        break;
+                    }
+                    else if(read_bytes==0)//read 返回0，表示EOF
+                    {
+                        printf("client fd %d disconnected\n",events[i].data.fd);
+                        close(events[i].data.fd);
+                        break;
+                    }
+                    
+                }
+            }
+            else{
+                printf("Something else happend\n");
+            }
+        }   
     }
-    
+
     close(sockfd);
 
     return 0;
