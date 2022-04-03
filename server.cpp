@@ -45,20 +45,20 @@ int main()
     bzero(&events,sizeof(events));
 
     bzero(&ev,sizeof(ev));
-    ev.data.fd=sockfd;
+    ev.data.fd=sockfd; //该IO口为服务器socket fd
     ev.events=EPOLLIN | EPOLLET;
     setnonblocking(sockfd);
-    epoll_ctl(epfd,EPOLL_CTL_ADD,sockfd,&ev);
+    epoll_ctl(epfd,EPOLL_CTL_ADD,sockfd,&ev); //将服务器socket fd添加到epoll
 
     
-    while (true)
+    while (true) // 不断监听epoll上的事件并处理
     {
-        int nfds=epoll_wait(epfd,events,MAX_EVENTS,-1);
-        errif(nfds==-1,"epoll wait error");
+        int nfds=epoll_wait(epfd,events,MAX_EVENTS,-1); //有nfds个fd发生事件
+        errif(nfds==-1,"epoll wait error"); 
 
-        for(int i=0;i<nfds;++i)
+        for(int i=0;i<nfds;++i) //处理这nfds个事件
         {
-            if(events[i].data.fd==sockfd)
+            if(events[i].data.fd==sockfd) //发生事件的fd是服务器socket fd，表示有新客户端连接
             {
                 struct sockaddr_in clnt_addr;
                 socklen_t clnt_addr_len=sizeof(clnt_addr);
@@ -70,14 +70,14 @@ int main()
 
                 bzero(&ev,sizeof(ev));
                 ev.data.fd=clnt_sockfd;
-                ev.events=EPOLLIN | EPOLLET;
-                setnonblocking(clnt_sockfd);
-                epoll_ctl(epfd,EPOLL_CTL_ADD,clnt_sockfd,&ev);
+                ev.events=EPOLLIN | EPOLLET; //对于客户端连接，使用ET模式，可以让epoll更加高效，支持更多并发
+                setnonblocking(clnt_sockfd); //ET需要搭配非阻塞式socket使用
+                epoll_ctl(epfd,EPOLL_CTL_ADD,clnt_sockfd,&ev); //将该客户端的socket fd添加到epoll
             }
-            else if(events[i].events & EPOLLIN)
+            else if(events[i].events & EPOLLIN) //发生事件的是客户端，并且是可读事件（EPOLLIN）
             {
                 char buf[READ_BUFFER]; //定义缓冲区
-                while(true)
+                while(true)  //由于使用非阻塞IO，需要不断读取，直到全部读取完毕
                 {
                     bzero(&buf,sizeof(buf)); //清空缓冲区
                     ssize_t read_bytes=read(events->data.fd,buf,sizeof(buf));//从客户端socket读到缓冲区，返回已读数据大小
@@ -87,20 +87,20 @@ int main()
                         printf("Message from client fd %d: %s\n",events[i].data.fd,buf);
                         write(events[i].data.fd,buf,sizeof(buf));//将相同的数据写回客户端
                     }
-                    else if(read_bytes==-1&&errno==EINTR)
+                    else if(read_bytes==-1&&errno==EINTR) //客户端正常中断、继续读取
                     {
                         printf("Continue reading");
                         continue;
                     }
-                    else if(read_bytes==-1 && ((errno==EAGAIN || errno==EWOULDBLOCK)))//read返回-1，表示发生错误，进行错误处理即可
+                    else if(read_bytes==-1 && ((errno==EAGAIN || errno==EWOULDBLOCK)))//非阻塞IO，这个条件表示数据全部读取完毕
                     {
                         printf("Finish reading once,errno:%d\n",errno);
                         break;
                     }
-                    else if(read_bytes==0)//read 返回0，表示EOF
+                    else if(read_bytes==0)//read 返回0，表示客户端断开连接
                     {
                         printf("client fd %d disconnected\n",events[i].data.fd);
-                        close(events[i].data.fd);
+                        close(events[i].data.fd); //关闭socket会自动将文件描述符从epoll树上移除
                         break;
                     }
                     
