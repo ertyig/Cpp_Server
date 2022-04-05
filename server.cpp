@@ -1,3 +1,13 @@
+/*
+ * @Author: leechain
+ * @Date: 2022-04-02 15:41:28
+ * @LastEditors: leechain
+ * @LastEditTime: 2022-04-05 16:23:55
+ * @FilePath: /Cpp_Server/server.cpp
+ * @Description: 
+ * 
+ * Copyright (c) 2022 by leechain, All Rights Reserved. 
+ */
 #include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -38,8 +48,8 @@ int main()
         {
             if(events[i].data.fd==serv_sock->getFd()) //发生事件的fd是服务器socket fd，表示有新客户端连接
             {
-                InetAddress *clnt_addr=new InetAddress(); //会发生内存泄漏吗，没有delete
-                Socket *clnt_sock=new Socket(serv_sock->accept(clnt_addr));//会发生内存泄漏吗，没有delete
+                InetAddress *clnt_addr=new InetAddress(); //会发生内存泄漏，没有delete
+                Socket *clnt_sock=new Socket(serv_sock->accept(clnt_addr));//会发生内存泄漏，没有delete
 
                 printf("new client fd %d IP: %s Port: %d\n",clnt_sock->getFd(),inet_ntoa(clnt_addr->addr.sin_addr),ntohs(clnt_addr->addr.sin_port));
                 clnt_sock->setnonblocking();
