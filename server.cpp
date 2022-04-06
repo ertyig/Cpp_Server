@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-02 15:41:28
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-05 16:23:55
+ * @LastEditTime: 2022-04-06 14:25:58
  * @FilePath: /Cpp_Server/server.cpp
  * @Description: 
  * 
@@ -20,6 +20,7 @@
 #include "Epoll.h"
 #include "InetAddress.h"
 #include "Socket.h"
+#include "Channel.h"
 
 using namespace std;
 #define MAX_EVENTS 1024
@@ -36,28 +37,31 @@ int main()
     serv_sock->listen();
     Epoll *ep=new Epoll();
     serv_sock->setnonblocking();
-    ep->addFd(serv_sock->getFd(),EPOLLIN | EPOLLET);
+    Channel *servChannel=new Channel(ep,serv_sock->getFd());
+    servChannel->enableReading();
 
     
     while (true) // 不断监听epoll上的事件并处理
     {
-        vector<epoll_event> events=ep->poll();
-        int nfds=events.size();
+        vector<Channel*> activeChannels=ep->poll();
+        int nfds=activeChannels.size();
 
         for(int i=0;i<nfds;++i) //处理这nfds个事件
         {
-            if(events[i].data.fd==serv_sock->getFd()) //发生事件的fd是服务器socket fd，表示有新客户端连接
+            int channel_fd=activeChannels[i]->getFd();
+            if(channel_fd==serv_sock->getFd()) //发生事件的fd是服务器socket fd，表示有新客户端连接
             {
                 InetAddress *clnt_addr=new InetAddress(); //会发生内存泄漏，没有delete
                 Socket *clnt_sock=new Socket(serv_sock->accept(clnt_addr));//会发生内存泄漏，没有delete
 
                 printf("new client fd %d IP: %s Port: %d\n",clnt_sock->getFd(),inet_ntoa(clnt_addr->addr.sin_addr),ntohs(clnt_addr->addr.sin_port));
                 clnt_sock->setnonblocking();
-                ep->addFd(clnt_sock->getFd(), EPOLLIN | EPOLLET);
+                Channel *clntChannel=new Channel(ep,clnt_sock->getFd());
+                clntChannel->enableReading();
             }
-            else if(events[i].events & EPOLLIN) //发生事件的是客户端，并且是可读事件（EPOLLIN）
+            else if(activeChannels[i]->getEvents() & EPOLLIN) //发生事件的是客户端，并且是可读事件（EPOLLIN）
             {
-                handleReadEvent(events[i].data.fd);
+                handleReadEvent(channel_fd);
             }
             else
             {
