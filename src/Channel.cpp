@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-06 09:48:20
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-07 21:34:46
+ * @LastEditTime: 2022-04-08 10:09:12
  * @FilePath: /Cpp_Server/src/Channel.cpp
  * @Description: 
  * 
@@ -13,7 +13,7 @@
 #include "EventLoop.h"
 //#include "Epoll.h"
 
-Channel::Channel(EventLoop *_loop,int _fd):ep(_ep),fd(_fd),events(0),revents(0),inEpoll(false)
+Channel::Channel(EventLoop *_loop,int _fd):loop(_loop),fd(_fd),events(0),revents(0),inEpoll(false)
 {
     
 }
