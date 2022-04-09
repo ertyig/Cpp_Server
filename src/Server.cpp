@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-07 21:22:50
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-08 11:13:05
+ * @LastEditTime: 2022-04-09 11:38:53
  * @FilePath: /Cpp_Server/src/Server.cpp
  * @Description: 
  * 
@@ -26,7 +26,7 @@ Server::Server(EventLoop *_loop) :loop(_loop)
     serv_sock->bind(serv_addr);
     serv_sock->listen();
     serv_sock->setnonblocking();
-
+    //新建一个Channel时，必须说明该Channel与哪个 EventLoop 和 fd 绑定
     Channel *servChannel=new Channel(loop,serv_sock->getFd());
     function<void()> cb=bind(&Server::newConnection,this,serv_sock);
     servChannel->setCallback(cb);

@@ -2,8 +2,8 @@
  * @Author: leechain
  * @Date: 2022-04-04 09:52:05
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-06 14:08:25
- * @FilePath: /Cpp_Server/Epoll.cpp
+ * @LastEditTime: 2022-04-09 11:48:50
+ * @FilePath: /Cpp_Server/src/Epoll.cpp
  * @Description: 
  * 
  * Copyright (c) 2022 by leechain, All Rights Reserved. 
@@ -43,6 +43,7 @@ void Epoll::addFd(int fd,uint32_t op)
     errif(epoll_ctl(epfd,EPOLL_CTL_ADD,fd,&ev)==-1,"epoll add event error");
 }
 
+//通过Epoll类中的poll()函数获取当前有事件发生的Channel
 vector<Channel*> Epoll::poll(int timeout)
 {
     vector<Channel*> activeChannels; //activeChannels是所有 有事件发生的Channel
@@ -64,7 +65,7 @@ void Epoll::updateChannel(Channel *channel)
     bzero(&ev,sizeof(ev));
     ev.data.ptr=channel;
     ev.events=channel->getEvents(); //拿到Channel希望监听的事件
-    if(!channel->getInpoll()) //添加Channel中的文件描述符到epoll
+    if(!channel->getInpoll()) //若文件描述符未在epoll中，则添加Channel中的文件描述符到epoll
     {
         errif(epoll_ctl(epfd,EPOLL_CTL_ADD,fd,&ev)==-1,"epoll add error");
     }
@@ -74,14 +75,3 @@ void Epoll::updateChannel(Channel *channel)
     }
 }
 
-// vector<epoll_event> Epoll::poll(int timeout)
-// {
-//     vector<epoll_event> activeEvents;
-//     int nfds=epoll_wait(epfd,events,MAX_EVENTS,timeout);
-//     errif(nfds==-1,"epoll wait error");
-//     for(int i=0;i<nfds;++i)
-//     {
-//         activeEvents.push_back(events[i]);
-//     }
-//     return activeEvents;
-// }

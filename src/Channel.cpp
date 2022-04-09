@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-06 09:48:20
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-08 10:09:12
+ * @LastEditTime: 2022-04-09 20:33:20
  * @FilePath: /Cpp_Server/src/Channel.cpp
  * @Description: 
  * 
@@ -11,7 +11,6 @@
 
 #include "Channel.h"
 #include "EventLoop.h"
-//#include "Epoll.h"
 
 Channel::Channel(EventLoop *_loop,int _fd):loop(_loop),fd(_fd),events(0),revents(0),inEpoll(false)
 {
@@ -23,8 +22,11 @@ Channel::~Channel()
 
 }
 
+//若服务器socket有可读事件，handleEvent()实际上会调用Server类的newConnection()新建连接。
+//若客户端socket有可读事件，handleEvent()实际上会调用Server类的handlrReadEvent()响应客户端请求。
 void Channel::handleEvent()
 {
+    //调用callback对象
     callback();
 }
 
