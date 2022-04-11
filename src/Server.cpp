@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-07 21:22:50
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-09 11:38:53
+ * @LastEditTime: 2022-04-10 20:17:24
  * @FilePath: /Cpp_Server/src/Server.cpp
  * @Description: 
  * 
@@ -13,29 +13,23 @@
 #include "Socket.h"
 #include "InetAddress.h"
 #include "Channel.h"
+#include "Acceptor.h"
 #include <functional>
 #include <cstring>
 #include <unistd.h>
 
 #define READ_BUFFER 1024
 
-Server::Server(EventLoop *_loop) :loop(_loop)
+Server::Server(EventLoop *_loop) :loop(_loop), acceptor(nullptr)
 {
-    Socket *serv_sock=new Socket();
-    InetAddress *serv_addr=new InetAddress("127.0.0.1",8888);
-    serv_sock->bind(serv_addr);
-    serv_sock->listen();
-    serv_sock->setnonblocking();
-    //新建一个Channel时，必须说明该Channel与哪个 EventLoop 和 fd 绑定
-    Channel *servChannel=new Channel(loop,serv_sock->getFd());
-    function<void()> cb=bind(&Server::newConnection,this,serv_sock);
-    servChannel->setCallback(cb);
-    servChannel->enableReading();
+    acceptor=new Acceptor(loop);
+    function<void(Socket*)> cb=bind(&Server::newConnection,this,placeholders::_1);
+    acceptor->setNewConnectionCallback(cb);   
 }   
 
 Server::~Server()
 {
-
+    delete acceptor;
 }
 
 void Server::handleReadEvent(int sockfd)
