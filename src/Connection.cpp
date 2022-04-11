@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-11 10:09:19
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-11 11:52:56
+ * @LastEditTime: 2022-04-11 15:19:41
  * @FilePath: /Cpp_Server/src/Connection.cpp
  * @Description: 
  * 
@@ -20,10 +20,10 @@
 
 Connection::Connection(EventLoop *_loop,Socket *_sock):loop(_loop),sock(_sock),channel(nullptr)
 {
-    channel=new Channel(loop,sock->getFd());
+    channel=new Channel(loop,sock->getFd()); //该连接的Channel
     function<void()> cb=bind(&Connection::echo,this,sock->getFd());
-    channel->setCallback(cb);
-    channel->enableReading();
+    channel->setCallback(cb); //绑定回调函数
+    channel->enableReading(); //打开读事件监听
 }
 
 Connection::~Connection()

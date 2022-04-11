@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-07 21:22:39
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-11 15:08:51
+ * @LastEditTime: 2022-04-11 15:21:13
  * @FilePath: /Cpp_Server/src/Server.h
  * @Description: 
  * 
@@ -28,7 +28,6 @@ public:
     Server(EventLoop*);
     ~Server();
 
-    //void handleReadEvent(int); //处理客户端请求
     void newConnection(Socket *sock); //新建TCP连接
     void deleteConnection(Socket *sock);
 };

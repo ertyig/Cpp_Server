@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-07 21:22:50
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-11 15:11:31
+ * @LastEditTime: 2022-04-11 15:20:56
  * @FilePath: /Cpp_Server/src/Server.cpp
  * @Description: 
  * 
@@ -38,12 +38,13 @@ void Server::newConnection(Socket *sock)
 {
     Connection *conn=new Connection(loop,sock);
     function<void(Socket*)> cb=bind(&Server::deleteConnection,this,placeholders::_1);
-    conn->setDeleteConnectionCallback(cb);
+    conn->setDeleteConnectionCallback(cb); // 绑定删除连接的回调函数
     connections[sock->getFd()]=conn;
 }
 
 void Server::deleteConnection(Socket *sock)
 {
+    //删除连接
     Connection *conn=connections[sock->getFd()];
     connections.erase(sock->getFd());
     delete conn;
