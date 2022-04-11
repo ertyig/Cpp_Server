@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-10 19:02:14
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-10 20:16:05
+ * @LastEditTime: 2022-04-11 11:46:45
  * @FilePath: /Cpp_Server/src/Acceptor.h
  * @Description: 
  * 
@@ -14,7 +14,6 @@
 
 class EventLoop;
 class Socket;
-class InetAddress;
 class Channel;
 
 class Acceptor
@@ -22,15 +21,12 @@ class Acceptor
 private:
     EventLoop *loop;
     Socket *sock;
-    InetAddress *addr;
     Channel *acceptChannel;
-    
+    function<void(Socket*)> newConnectionCallback;
 public:
     Acceptor(EventLoop *_loop);
     ~Acceptor();
+    
     void acceptConnection();
-
-    function<void(Socket*)> newConnectionCallback;
-
     void setNewConnectionCallback(function<void(Socket*)>);
 };
