@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-02 15:41:28
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-09 11:12:44
+ * @LastEditTime: 2022-04-13 10:04:58
  * @FilePath: /Cpp_Server/server.cpp
  * @Description: 
  * 
@@ -16,9 +16,9 @@
 int main()
 {
     //启动服务器
-    EventLoop *loop = new EventLoop();
+    EventLoop *loop = new EventLoop(); 
     Server *server = new Server(loop);
-    loop->loop();
+    loop->loop(); 
 
     return 0;
 }
