@@ -2,9 +2,9 @@
  * @Author: leechain
  * @Date: 2022-04-11 10:09:05
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-11 11:52:40
+ * @LastEditTime: 2022-04-13 10:02:44
  * @FilePath: /Cpp_Server/src/Connection.h
- * @Description: 
+ * @Description: 管理TCP连接
  * 
  * Copyright (c) 2022 by leechain, All Rights Reserved. 
  */
@@ -27,6 +27,6 @@ public:
     Connection(EventLoop *_loop,Socket *_sock);
     ~Connection();
 
-    void echo(int sockfd);
+    void echo(int sockfd);//处理客户端读写事件
     void setDeleteConnectionCallback(function<void(Socket*)> _cb);
 };

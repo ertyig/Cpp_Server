@@ -2,9 +2,9 @@
  * @Author: leechain
  * @Date: 2022-04-10 19:02:14
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-11 11:46:45
+ * @LastEditTime: 2022-04-13 09:55:51
  * @FilePath: /Cpp_Server/src/Acceptor.h
- * @Description: 
+ * @Description: 新建TCP连接
  * 
  * Copyright (c) 2022 by leechain, All Rights Reserved. 
  */
@@ -24,9 +24,9 @@ private:
     Channel *acceptChannel;
     function<void(Socket*)> newConnectionCallback;
 public:
-    Acceptor(EventLoop *_loop);
+    Acceptor(EventLoop *_loop); //该构造函数 新建服务器的socket
     ~Acceptor();
     
-    void acceptConnection();
+    void acceptConnection();  //允许客户端的TCP连接
     void setNewConnectionCallback(function<void(Socket*)>);
 };

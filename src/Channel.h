@@ -2,9 +2,9 @@
  * @Author: leechain
  * @Date: 2022-04-06 09:48:06
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-09 11:32:35
+ * @LastEditTime: 2022-04-13 09:56:31
  * @FilePath: /Cpp_Server/src/Channel.h
- * @Description: 
+ * @Description: Channel管理socket fd
  * 
  * Copyright (c) 2022 by leechain, All Rights Reserved. 
  */

@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-06 09:48:20
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-10 19:42:02
+ * @LastEditTime: 2022-04-12 09:35:29
  * @FilePath: /Cpp_Server/src/Channel.cpp
  * @Description: 
  * 
@@ -26,6 +26,7 @@ Channel::~Channel()
 //若客户端socket有可读事件，handleEvent()实际上会调用Server类的handlrReadEvent()响应客户端请求。
 void Channel::handleEvent()
 {
+    //调用回调函数，无需再传参
     callback();
 }
 
