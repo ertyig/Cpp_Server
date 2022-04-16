@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-02 15:41:28
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-13 10:04:58
+ * @LastEditTime: 2022-04-14 11:45:36
  * @FilePath: /Cpp_Server/server.cpp
  * @Description: 
  * 
@@ -20,6 +20,8 @@ int main()
     Server *server = new Server(loop);
     loop->loop(); 
 
+    delete loop;
+    delete server;
     return 0;
 }
 

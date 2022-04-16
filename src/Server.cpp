@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-07 21:22:50
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-13 09:30:34
+ * @LastEditTime: 2022-04-14 11:38:51
  * @FilePath: /Cpp_Server/src/Server.cpp
  * @Description: 
  * 
@@ -19,7 +19,6 @@
 #include <cstring>
 #include <unistd.h>
 
-#define READ_BUFFER 1024
 
 Server::Server(EventLoop *_loop) :loop(_loop), acceptor(nullptr)
 {

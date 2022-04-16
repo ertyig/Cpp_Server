@@ -2,7 +2,7 @@
  * @Author: leechain
  * @Date: 2022-04-11 10:09:05
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-13 10:02:44
+ * @LastEditTime: 2022-04-14 11:26:37
  * @FilePath: /Cpp_Server/src/Connection.h
  * @Description: 管理TCP连接
  * 
@@ -15,6 +15,7 @@
 class EventLoop;
 class Socket;
 class Channel;
+class Buffer;
 
 class Connection
 {
@@ -23,6 +24,8 @@ private:
     Socket *sock;
     Channel *channel;
     function<void(Socket*)> deleteConnectionCallback;
+    string *inBuffer;
+    Buffer *readBuffer;
 public:
     Connection(EventLoop *_loop,Socket *_sock);
     ~Connection();

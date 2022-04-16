@@ -2,65 +2,69 @@
  * @Author: leechain
  * @Date: 2022-04-02 15:41:08
  * @LastEditors: leechain
- * @LastEditTime: 2022-04-08 11:19:59
+ * @LastEditTime: 2022-04-15 16:36:27
  * @FilePath: /Cpp_Server/client.cpp
  * @Description: 
  * 
  * Copyright (c) 2022 by leechain, All Rights Reserved. 
  */
 #include <iostream>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <unistd.h>
+#include "src/Socket.h"
+#include "src/Buffer.h"
+#include "src/InetAddress.h"
 #include <cstring>
 #include "src/util.h"
-#include <unistd.h>
 
-#define BUFFER_SIZE 1024
 
 int main()
 {
-    int sockfd=socket(AF_INET,SOCK_STREAM,0);
-    errif(sockfd==-1,"socket create error!");
+    Socket *sock=new Socket();
+    InetAddress *addr=new InetAddress("127.0.0.1",8888);
+    
+    sock->connect(addr);
+    int sockfd=sock->getFd();
+    Buffer *sendBuffer=new Buffer();
+    Buffer *readBuffer=new Buffer();
 
-    struct sockaddr_in serv_addr;
-    bzero(&serv_addr,sizeof(serv_addr));
-    serv_addr.sin_family=AF_INET;
-    serv_addr.sin_addr.s_addr=inet_addr("127.0.0.1");
-    serv_addr.sin_port=htons(8888);
-
-    errif(connect(sockfd,(sockaddr*)&serv_addr,sizeof(serv_addr))==-1,"socket connect error!");
 
     while(true)
     {
-        char buf[BUFFER_SIZE];//定义缓冲区
-        bzero(&buf,sizeof(buf));//清空缓冲区
-        scanf("%s",buf);
-        ssize_t write_bytes=write(sockfd,buf,sizeof(buf));//向服务器写数据
+        sendBuffer->getline();
+        ssize_t write_bytes=write(sockfd,sendBuffer->c_str(),sendBuffer->size());//向服务器写数据
         if(write_bytes==-1)//write返回-1，表示写数据发生错误
         {
-            printf("socket has disconnected,can't write!");
+            printf("socket disconnected,can't write!");
             break;
         }
-        bzero(&buf,sizeof(buf));//发送完数据之后，清空缓冲区，准备接受从服务器读取的新数据
 
-        ssize_t read_bytes=read(sockfd,buf,sizeof(buf));//从服务器读取数据
-        if(read_bytes>0)
+        int already_read=0;
+        char buf[1024];//buf大小无所谓
+        while(true)
         {
-            printf("Message from server: %s\n",buf);
-    
+            bzero(&buf,sizeof(buf));
+            ssize_t read_bytes=read(sockfd,buf,sizeof(buf));//从服务器读取数据
+            if(read_bytes>0)
+            {
+                readBuffer->append(buf,read_bytes);
+                already_read+=read_bytes;
+            }
+            else if(read_bytes==0)//read返回0，表示EOF，通常是服务器断开连接，等会儿进行测试
+            {
+                printf("server socket disconnected!\n");
+                exit(EXIT_SUCCESS);
+            }
+
+            if(already_read>=sendBuffer->size())//read 返回-1，表示发生错误，进行错误处理
+            {
+                printf("Message from server: %s\n",readBuffer->c_str());
+                break;
+            }
         }
-        else if(read_bytes==0)//read返回0，表示EOF，通常是服务器断开连接，等会儿进行测试
-        {
-            printf("server socket disconnected!\n");
-            break;
-        }
-        else if(read_bytes==-1)//read 返回-1，表示发生错误，进行错误处理
-        {
-            close(sockfd);
-            errif(true,"socket read error!");
-        }
+        readBuffer->clear();
     }
 
-    close(sockfd);
+    delete addr;
+    delete sock;
     return 0;
 }
